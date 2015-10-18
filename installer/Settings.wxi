@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <?define ProductName = "Mumble" ?>
+  <?define ProductManufacturer = "The Mumble team" ?>
+  <?define ProductVersion = "1.3.0" ?>
+
+  <?if $(sys.BUILDARCH) = "x86" ?>
+    <?define ProductUpgradeCode = B0EEFCC7-8A9c-4471-AB10-CBD35BE3161D ?>
+    <?define ArchSpecificProgramFilesFolderId = "ProgramFilesFolder" ?>
+  <?elseif $(sys.BUILDARCH) = "x64" ?>
+    <?define ProductUpgradeCode = E028BDFC-3FE2-4BEE-A33B-EB9C80611555 ?>
+    <?define ArchSpecificProgramFilesFolderId = "ProgramFiles64Folder" ?>
+  <?else?>
+    <?error Unsupported build architecture: $(sys.BUILDARCH) ?>
+  <?endif?>
+
+  <?define MumbleExeGuid = A08F7909-1116-4AC8-9422-051FA1A1BE19 ?>
+  <?define MumbleDesktopShortcutGuid = 4448BE21-1AA1-41B8-887E-B3E07B28EFAE ?>
+  <?define MurmurDesktopShortcutGuid = 02936CED-6588-4B7E-880F-241A4CF5E7D3 ?>
+  <?define UninstallerComponentGuid = CB81DC70-063E-48DD-94C3-593BBBAB20F4 ?>
+  <?define LicenseTextGuid = 87C7967B-5E4B-41DD-83F5-A9E9E8AD3B39 ?>
+  <?define ReadMeTextGuid = 15878902-B819-4E77-8C1D-0A915D79660B ?>
+  <?define ApplicationProgramsFolderRemovalComponentGuid = 0AE1745D-FF86-4D61-BAF3-44248D21D263 ?>
+  <?define NSISUninstallComponentGuid = 3116B7EF-CBA3-4E0B-A2C5-0F0608038905 ?>
+
+
+  <!-- Enable the StaticBuild option if we detect MUMBLE_PREFIX in the environment -->
+  <?ifdef env.MUMBLE_PREFIX ?>
+    <?define StaticBuild = true ?>
+  <?endif ?>
+
+  <!-- Defaults for values that aren't given by environment variables -->
+  <?ifndef env.MumbleSourceDir ?>
+    <?define SourceDir = "\dev\mumble" ?>
+  <?else ?>
+    <?define SourceDir = "$(env.MumbleSourceDir)" ?>
+  <?endif ?>
+  
+  <?ifndef env.MumbleQtDir ?>
+    <?define QtDir = "\dev\QtMumble" ?>
+  <?else ?>
+    <?define QtDir = "$(env.MumbleQtDir)" ?>
+  <?endif ?>
+  
+  <?ifndef env.MumbleDebugToolsDir ?>
+    <?if $(sys.BUILDARCH) = "x86" ?>
+      <?define DebugToolsDir = "C:\Program Files (x86)\Debugging Tools for Windows (x86)" ?>
+    <?elseif $(sys.BUILDARCH) = "x64" ?>
+      <?define DebugToolsDir = "C:\Program Files\Debugging Tools for Windows (x64)" ?>
+    <?endif ?>
+  <?else ?>
+    <?define DebugToolsDir = "$(env.MumbleDebugToolsDir)" ?>
+  <?endif ?>
+  
+  <?ifndef env.MumbleSndFileDir ?>
+    <?ifndef env.MumbleNoSndFile ?>
+      <?define SndFileDir = "\Program Files (x86)\Mega-Nerd\libsndfile\bin" ?>
+    <?endif ?>
+  <?else ?>
+    <?define SndFileDir = "$(env.MumbleSndFileDir)" ?>
+  <?endif ?>
+  
+  <?ifndef env.MumbleMySQLDir ?>
+    <?ifndef env.MumbleNoMySQL ?>
+      <?define MySQLDir = "\dev\MySQL" ?>
+    <?endif ?>
+  <?else ?>
+    <?define MySQLDir = "$(env.MumbleMySQLDir)" ?>
+  <?endif ?>
+  
+  <?ifndef env.MumbleIceDir ?>
+    <?ifndef env.MumbleNoIce ?>
+      <?define IceDir = "\Program Files (x86)\ZeroC\Ice-3.4.2\bin\vc100" ?>
+    <?endif ?>
+  <?else ?>
+    <?define IceDir = "$(env.MumbleIceDir)" ?>
+  <?endif ?>
+  
+  <?ifndef env.MumbleBzip2Dir ?>
+    <?ifdef IceDir ?>
+      <?define Bzip2Dir = "$(var.IceDir)" ?>
+    <?endif ?>
+  <?else ?>
+    <?define Bzip2Dir = "$(env.MumbleBzip2Dir)" ?>
+  <?endif ?>
+
+  <?ifndef env.MumbleOpenSslDir ?>
+    <?define OpenSslDir = "\dev\openssl" ?>
+  <?else ?>
+    <?define OpenSslDir = "$(env.MumbleOpenSslDir)" ?>
+  <?endif ?>
+
+  <?ifndef env.MumbleZlibDir ?>
+    <?define ZlibDir = "\dev\zlib" ?>
+  <?else ?>
+    <?define ZlibDir = "$(env.MumbleZlibDir)" ?>
+  <?endif ?>
+  
+  <!--
+    Note: in order to use merge modules with MSVS 2013 (VCRedist 12.0),
+    you need to bump the InstallerVersion in Product.wxs to 405.
+  -->
+  <?ifndef env.MumbleMergeModuleDir ?>
+    <?ifndef env.MumbleNoMergeModule ?>
+      <?define MergeModuleDir = "C:\Program Files (x86)\Common Files\Merge Modules" ?>
+    <?endif ?>
+  <?else ?>
+    <?define MergeModuleDir = "$(env.MumbleMergeModuleDir)" ?>
+  <?endif ?>
+
+  <!-- If the MumbleNoMergeModule env var is set, prefer embedding the .DLLs directly into the installer. -->
+  <?ifdef env.MumbleNoMergeModule ?>
+    <!-- But, if the MumbleNoEmbedVCRedist env var is set, don't embed them anyway. -->
+    <?ifndef env.MumbleNoEmbedVCRedist ?>
+       <?ifndef env.MumbleRedistDirVC12 ?>
+         <?if $(sys.BUILDARCH) = "x86" ?>
+           <?define RedistDirVC12 = "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x86\Microsoft.VC120.CRT" ?>
+         <?elseif $(sys.BUILDARCH) = "x64" ?>
+           <?define RedistDirVC12 = "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x64\Microsoft.VC120.CRT" ?>
+         <?endif ?>
+       <?else ?>
+         <?define RedistDirVC12 = "$(env.MumbleRedistDirVC12)" ?>
+       <?endif ?>
+    <?endif ?>
+  <?endif ?>
+
+  <?define Win81SDKDir = "C:\Program Files (x86)\Windows Kits\8.1" ?>
+
+  <!--
+    System32x86Dir is the system's System32 directory
+    that contains x86 binaries.
+    For 32-bit Windows, it's System32.
+    For 64-bit Windows, it's SysWOW64.
+  -->
+  <?ifdef env.ProgramFiles(x86) ?>
+    <?define System32x86Dir = "$(env.SystemRoot)\SysWOW64" ?>
+  <?else ?>
+    <?define System32x86Dir = "$(env.SystemRoot)\System32" ?>
+  <?endif ?>
+
+  <!-- Environment flags to disable features. Value doesn't matter -->
+  <?ifdef env.MumbleSSE ?>
+    <?define SSE = true ?>
+  <?endif ?>
+  
+  <?ifndef env.MumbleNoSSE2 ?>
+    <?define SSE2 = true ?>
+  <?endif ?>
+  
+  <?ifndef env.MumbleNoG15 ?>
+    <?define G15 = true ?> 
+  <?endif ?>
+
+  <?ifndef env.MumbleNoD3DCompilerDLL ?>
+    <?define D3DCompilerDLL = true ?>
+  <?endif ?>
+
+  <?ifdef env.MumbleVersionSubDir ?>
+    <?define VersionSubDir = "$(env.MumbleVersionSubDir)" ?>
+  <?endif ?>
+
+</Include>
